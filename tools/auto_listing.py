@@ -2,7 +2,7 @@ from gologin import GoLogin
 from playwright.sync_api import sync_playwright
 import time
 from config.index import GOLOGIN_CONFIG
-from tasks.auto_listing import set_name, upload_images, set_product_attributes, set_description, set_categories, set_brand
+from tasks.auto_listing import set_name, upload_images, set_product_attributes, set_description, set_categories, set_brand, set_sale_infomation, set_variations
 
 def initialize_browser():
     gl = GoLogin(GOLOGIN_CONFIG)
@@ -33,6 +33,12 @@ def process_page(page):
 
         # description
         set_description(page)
+
+        # set size & color
+        set_sale_infomation(page)
+
+        # set variations
+        set_variations(page)
 
         pass
 

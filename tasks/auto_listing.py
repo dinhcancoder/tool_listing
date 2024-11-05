@@ -4,10 +4,12 @@ with open(file_path, 'r') as file:
     lines = file.readlines()
 
 product_name = ""
+seller_sku = ""
 for line in lines:
     if line.startswith("name:"):
         product_name = line.split(':', 1)[1].strip()
-        break
+    if line.startswith("sku:"):
+        seller_sku = line.split(':', 1)[1].strip()
 
 # set tên sản phẩm
 def set_name(page):
@@ -77,3 +79,59 @@ def set_categories(page):
 def set_brand(page):
     page.click('//*[@id="preview-product-brand"]/div[2]/div/div/div')
     page.click('//*[@id="theme-arco-select-popup-0"]/div/div/li[2]')
+
+# Sales Information
+def set_sale_infomation(page):
+    base_path = "C:/Users/Admin/Downloads/eclipse/Downloads/sw/"
+    input_nums = [2, 3, 4, 5, 6, 7, 8, 9, 10]
+    file_names = [
+        "sport_grey",
+        "ash",
+        "black",
+        "forest_green",
+        "light_pink",
+        "light-blue",
+        "red",
+        "sand",
+        "white"
+    ]
+
+    size_nums = [2, 3, 4, 5, 6, 7]
+    size_names = ['S', 'M', 'L', 'XL', '2XL', '5XL']
+
+    page.click('//*[@id="publish_enable_variation"]/div[1]/div/div/button')
+    page.click('//*[@id="sale_properties"]/div/div[1]/div[2]/div/div')
+    page.click('//*[@id="theme-arco-select-popup-45"]/div/div/li[2]')
+
+    # color
+    for file_name, input_num in zip(file_names, input_nums):
+        page.set_input_files(
+            f'//*[@id="sale_properties"]/div/div[3]/div[1]/div[{input_num}]/div/div[1]/div[1]/div/div/div[2]/input', 
+            f'{base_path}{file_name}.png'
+        )
+        page.fill(
+            f'//*[@id="sale_properties"]/div/div[3]/div[1]/div[{input_num}]/div/div[1]/div[2]/div/span/span/input', 
+            file_name
+        )
+        page.click('//*[@id="sale_properties"]/div')
+
+    page.click('//*[@id="sale_properties"]/div/div[3]/button')
+    
+    # size
+    page.click('//*[@id="sale_properties"]/button')
+    page.click('//*[@id="sale_properties"]/div[2]/div[1]/div[2]/div[1]/div')
+    page.click('//*[@id="theme-arco-select-popup-55"]/div/div/li[1]')
+
+    for size_name, size_num in zip(size_names, size_nums):
+        page.fill(f'//*[@id="sale_properties"]/div[2]/div[3]/div[1]/div[{size_num}]/div/div[1]/div/div/span/span/input', size_name)
+        page.click('//*[@id="sale_properties"]/div[2]')
+    
+    page.click('//*[@id="sale_properties"]/div[2]/div[3]/button')
+
+def set_variations(page):
+    page.click('//*[@id="skus"]/div[1]/div[2]/div/button')
+    page.fill('//*[@id="skus"]/div[2]/div[2]/div[2]/div/span/span/input', '45')
+    page.fill('//*[@id="skus"]/div[2]/div[3]/div/div/span/span/input', '50')
+    page.fill('//*[@id="skus"]/div[2]/div[3]/div/div/span/span/input', '50')
+    page.fill('//*[@id="skus"]/div[2]/div[4]/input', f'S_{seller_sku}')
+    page.click('//*[@id="skus"]/div[2]/button')

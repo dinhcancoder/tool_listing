@@ -1,4 +1,3 @@
 GOLOGIN_CONFIG = {
-    "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI2NmY3ODRkMmJjZDIzZWVlMDUwZjUyNGIiLCJ0eXBlIjoiZGV2Iiwiand0aWQiOiI2NzE4YzBhMTc2YThhZWNiOGEyMTc5NGUifQ.AKeuyGoOt-fWp_hpo2UoU_EeE9nz8BeBj8gQ93yhU5M",
-    "profile_id": "66f78272cedbe2a47d9fc25a"
+    "token": "your_token",
 }
