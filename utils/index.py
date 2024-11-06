@@ -1,6 +1,6 @@
 def show_toast_notification(page, message):
-    page.evaluate(f"""
-        (message => {{
+    page.evaluate("""
+        (message => {
             const toast = document.createElement('div');
             toast.textContent = message;
             toast.style.position = 'fixed';
@@ -14,5 +14,5 @@ def show_toast_notification(page, message):
             document.body.appendChild(toast);
 
             setTimeout(() => toast.remove(), 3000);
-        }}))(message);
-    """)
+        })(message);
+    """, message)

@@ -3,6 +3,18 @@ import PySimpleGUI as sg
 import requests
 from config.index import GOLOGIN_CONFIG
 
+def get_folder_profiles():
+    url = "https://api.gologin.com/folders"
+    headers = {
+        "Authorization": f"Bearer {GOLOGIN_CONFIG['token']}",
+        "Content-Type": "application/json"
+    }
+    params = {
+        "limit": 99
+    }
+
+    response = requests.get(url, headers=headers, params=params)
+
 def get_profiles():
     url = "https://api.gologin.com/browser/v2"
     headers = {
