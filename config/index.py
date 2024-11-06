@@ -1,3 +1,3 @@
 GOLOGIN_CONFIG = {
-    "token": "your_token",
+    "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI2NmY3ODRkMmJjZDIzZWVlMDUwZjUyNGIiLCJ0eXBlIjoiZGV2Iiwiand0aWQiOiI2NzE4YzBhMTc2YThhZWNiOGEyMTc5NGUifQ.AKeuyGoOt-fWp_hpo2UoU_EeE9nz8BeBj8gQ93yhU5M",
 }

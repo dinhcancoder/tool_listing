@@ -14,9 +14,10 @@ def initialize_browser(profile_id):
         debugger_address = f"http://{debugger_address}"
     return gl, debugger_address
 
-def process_page(page, folder_path, folder_name):
-    page.goto('https://seller-us.tiktok.com/product/create/1729677649988915313?online=1&tab=1', wait_until="domcontentloaded")
-    page.wait_for_load_state('load', timeout=120000)
+def process_page(page, folder_path, folder_name, type_shirt):
+    if type_shirt == "hoodie":
+        page.goto('https://seller-us.tiktok.com/product/create/1729843053363368049?online=1&shop_region=US&tab=1', wait_until="domcontentloaded")
+        page.wait_for_load_state('load', timeout=120000)
 
     try:
 
@@ -28,6 +29,6 @@ def process_page(page, folder_path, folder_name):
         print(f"An error has occurrend: {e}")
 
 def close_browser(browser, gl):
-    time.sleep(1000)
+    time.sleep(2)
     browser.close()
     gl.stop()
