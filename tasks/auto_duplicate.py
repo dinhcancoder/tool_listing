@@ -4,7 +4,7 @@ import json
 from utils.index import show_toast_notification
 
 def read_product_data(data_file_path):
-    product_name = sku = price = quantity = ""
+    product_name = sku = price = quantity = description = ""
 
     with open(data_file_path, 'r', encoding='utf-8') as file:
         for line in file:
@@ -16,16 +16,18 @@ def read_product_data(data_file_path):
                 price = line.split('price:')[1].strip()
             if line.startswith('quantity:'):
                 quantity = line.split('quantity:')[1].strip()
+            if line.startswith('description:'):
+                description = line.split('description')[1].strip()
 
-    return product_name, sku, quantity, price
+    return product_name, sku, quantity, price, description
 
 def prepare_product_data(folder_path, folder_name):
     image_folder_path = os.path.join(folder_path, folder_name)
     data_file_path = os.path.join(folder_path, folder_name, 'data.txt')
     image_files = [f for f in os.listdir(image_folder_path) if f.endswith(('.png', '.jpg'))]
-    product_name, sku, price, quantity = read_product_data(data_file_path)
+    product_name, sku, price, quantity, description = read_product_data(data_file_path)
 
-    return image_folder_path, data_file_path, image_files, product_name, sku, price, quantity
+    return image_folder_path, data_file_path, image_files, product_name, sku, price, quantity, description
 
 def remove_images(page):
     try:
@@ -73,16 +75,32 @@ def set_product_name(page, product_name):
     except Exception as e:
         print("Error setting product name:", e)
 
-def generate_description_and_upload_image(page, image_files, image_folder_path, product_name):
+import os
+import time
+
+def generate_description_and_upload_image(page, image_files, image_folder_path, product_name, description):
+    print(f'description: {description}')
+    img_path_one = os.path.join(image_folder_path, image_files[0])
+    img_path_two = os.path.join(image_folder_path, image_files[1])
+    img_path_three = os.path.join(image_folder_path, image_files[2])
+    
     try:
-        page.fill('//*[@id="preview-product-description"]/div[2]/div[2]/div[1]/div[2]/input', product_name)
-        page.click('//*[@id="preview-product-description"]/div[2]/div[2]/div[1]/div[2]/button')
-        page.click('//*[@id="preview-product-description"]/div[2]/div[2]/div[1]/div[4]/button')
-        first_img_name = image_files[0]
-        img_path_one = os.path.join(image_folder_path, first_img_name)
-        page.set_input_files('//*[@id="preview-product-description"]/div[1]/div[2]/div/div/div/input', img_path_one)
+        if description:
+            
+            page.fill('//*[@id="preview-product-description"]/div[2]/div[2]/div[2]/div/div/div[2]', description)
+        else:
+            page.fill('//*[@id="preview-product-description"]/div[2]/div[2]/div[1]/div[2]/input', product_name)
+            page.click('//*[@id="preview-product-description"]/div[2]/div[2]/div[1]/div[2]/button')
+            page.click('//*[@id="preview-product-description"]/div[2]/div[2]/div[1]/div[4]/button')
+
+        page.set_input_files('//*[@id="preview-product-description"]/div[2]/div[2]/div[2]/div/div/input', img_path_one)
+        page.set_input_files('//*[@id="preview-product-description"]/div[2]/div[2]/div[2]/div/div/input', img_path_two)
+        page.set_input_files('//*[@id="preview-product-description"]/div[2]/div[2]/div[2]/div/div/input', img_path_three)
+
+        time.sleep(2)
+
     except Exception as e:
-        print("Error in create_description_and_upload_image:", e)
+        print("Error in create_description_and_upload_image, retrying...", e)
 
 def format_image_name(img_name):
     formatted_name = img_name.replace('_', ' ')
@@ -138,15 +156,41 @@ def set_color_and_size(page, image_files, image_folder_path):
     except Exception as e:
         print("Error in set_color_and_size:", e)
 
-def set_variations(page, price, quantity, sku):
+def set_variations(page, price, quantity, sku, is_style):
     try:
         page.click('//*[@id="skus"]/div[1]/div[2]/div/button')
-        page.fill('//*[@id="skus"]/div[2]/div[3]/div[2]/div/span/span/input', price)
-        page.fill('//*[@id="skus"]/div[2]/div[4]/div/div/span/span/input', quantity)
-        page.fill('//*[@id="skus"]/div[2]/div[5]/input', sku)
+        page.fill('//*[@id="skus"]/div[2]/div[4]/div[2]/div/span/span/input', price)
+        page.fill('//*[@id="skus"]/div[2]/div[5]/div/div/span/span/input', quantity)
+        
+        if is_style:
+            page.click('//*[@id="skus"]/div[2]/div[3]')
+            page.wait_for_selector("body > div:nth-of-type(9) > span > div > div:first-child > div > div")
+            optionStyles = page.query_selector_all("body > div:nth-of-type(9) > span > div > div:first-child > div > div > li")
+
+            for li in optionStyles:
+                text = li.text_content()
+                print(text)
+
+
+            # for index, style in enumerate(optionStyles[1:], start=2):
+            #     style_text = page.text_content(f'//*[@id="theme-arco-select-popup-361"]/div/div/li[{index}]')
+            #     price(f'style text: {style_text}')
+
+            #     if style_text:
+            #         first_char = style_text[0]
+            #         style.click()                    
+            #         new_sku = f"{first_char}_{sku}"
+            #         page.fill('//*[@id="skus"]/div[2]/div[6]/input', new_sku)
+            #         page.click('//*[@id="skus"]/div[2]/div[3]')
+        else:
+            page.fill('//*[@id="skus"]/div[2]/div[6]/input', sku)
+
+        
         page.click('//*[@id="skus"]/div[2]/button')
+
     except Exception as e:
         print("Error setting variations:", e)
+
 
 def submit(page):
     try:
@@ -155,13 +199,14 @@ def submit(page):
     except Exception as e:
         print("Error in submit:", e)
 
-def run_tool(page, folder_path, folder_name):
-    image_folder_path, data_file_path, image_files, product_name, sku, price, quantity = prepare_product_data(folder_path, folder_name)
+def run_tool(page, folder_path, folder_name, is_style):
+    image_folder_path, data_file_path, image_files, product_name, sku, price, quantity, description = prepare_product_data(folder_path, folder_name)
 
     remove_images(page)
     load_images(page, image_files, image_folder_path)
     set_product_name(page, product_name)
-    generate_description_and_upload_image(page, image_files, image_folder_path, product_name)
-    set_color_and_size(page, image_files, image_folder_path)
-    set_variations(page, price, quantity, sku)
+    generate_description_and_upload_image(page, image_files, image_folder_path, product_name, description)
+    if not is_style:
+        set_color_and_size(page, image_files, image_folder_path)
+    set_variations(page, price, quantity, sku, is_style)
     submit(page)
