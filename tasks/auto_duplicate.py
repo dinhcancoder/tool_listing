@@ -167,9 +167,9 @@ def set_variations(page, price, quantity, sku, is_style):
             page.wait_for_selector("body > div:nth-of-type(9) > span > div > div:first-child > div > div")
             optionStyles = page.query_selector_all("body > div:nth-of-type(9) > span > div > div:first-child > div > div > li")
 
-            for li in optionStyles:
-                text = li.text_content()
-                print(text)
+            for index, li in enumerate(optionStyles[1:], start=2):  # Bắt đầu từ phần tử thứ hai
+                li.click()
+                print(f"Clicked on li element at index {index}")
 
 
             # for index, style in enumerate(optionStyles[1:], start=2):
