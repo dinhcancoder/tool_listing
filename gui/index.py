@@ -85,6 +85,7 @@ def show_gui():
             selected_profiles = values["selected_profiles"]
             folder_path = values["folder_path"]
             type_shirt = values["product_type"]
+            is_style = values["is_style"]
 
             if not folder_path:
                 sg.popup("Please select a folder!")
@@ -98,4 +99,4 @@ def show_gui():
                 break
 
     window.close()
-    return selected_ids, folder_path, type_shirt
+    return selected_ids, folder_path, type_shirt, is_style

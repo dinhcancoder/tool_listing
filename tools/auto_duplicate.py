@@ -7,21 +7,21 @@ import time
 def initialize_browser(profile_id):
     gl = GoLogin({
         "token": GOLOGIN_CONFIG['token'],
-        "profile_id": profile_id
+        "profile_id": '66f78272cedbe2a47d9fc25a'
     })
     debugger_address = gl.start()
     if not debugger_address.startswith("http://"):
         debugger_address = f"http://{debugger_address}"
     return gl, debugger_address
 
-def process_page(page, folder_path, folder_name, type_shirt):
+def process_page(page, folder_path, folder_name, type_shirt, is_style):
     if type_shirt == "hoodie":
         page.goto(GOLOGIN_CONFIG['link_duplicate_hoodie'], wait_until="domcontentloaded")
         page.wait_for_load_state('load', timeout=120000)
 
     try:
 
-        run_tool(page, folder_path, folder_name)
+        run_tool(page, folder_path, folder_name, is_style)
 
         pass
 
