@@ -37,6 +37,8 @@ def remove_images(page):
         for i in range(img_length):
             page.hover('//*[@id="main_image_item_0"]/div/div')
             page.click('//*[@id="main_image_item_0"]/div/div/div[1]/div[3]')
+
+        print('done remove image')
     except Exception as e:
         print("Error in remove_images:", e)
 
@@ -45,6 +47,7 @@ def load_images(page, image_files, image_folder_path):
         img_path = os.path.join(image_folder_path, img_name)
         try:
             page.set_input_files(f'//*[@id="main_image_item_{index}"]/div/div/div[1]/input', img_path)
+            print('done load image')
         except Exception as e:
             print(f"Error loading image {img_name}:", e)
 
@@ -64,12 +67,14 @@ def check_images_loaded(page, image_files):
                 if not image_loaded:
                     all_images_loaded = False
                     break
+                print('done checking image')
             except Exception as e:
                 print(f"Error checking image loaded for index {index}:", e)
 
 def set_product_name(page, product_name):
     try:
         page.fill('//*[@id="preview-product-title"]/div/div[1]/div/div/div/div/span/span/input', product_name)
+        print('done set product name')
     except Exception as e:
         print("Error setting product name:", e)
 
@@ -81,6 +86,8 @@ def generate_description_and_upload_image(page, image_files, image_folder_path, 
         first_img_name = image_files[0]
         img_path_one = os.path.join(image_folder_path, first_img_name)
         page.set_input_files('//*[@id="preview-product-description"]/div[1]/div[2]/div/div/div/input', img_path_one)
+
+        print('done set generate_description_and_upload_image')
     except Exception as e:
         print("Error in create_description_and_upload_image:", e)
 
