@@ -16,7 +16,7 @@ def initialize_browser(profile_id):
 
 def process_page(page, folder_path, folder_name, type_shirt):
     if type_shirt == "hoodie":
-        page.goto('https://seller-us.tiktok.com/product/create/1729843053363368049?online=1&shop_region=US&tab=1', wait_until="domcontentloaded")
+        page.goto(GOLOGIN_CONFIG['link_duplicate_hoodie'], wait_until="domcontentloaded")
         page.wait_for_load_state('load', timeout=120000)
 
     try:
