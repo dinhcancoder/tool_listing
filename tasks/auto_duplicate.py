@@ -1,7 +1,7 @@
 import time
 import os
 import json
-from utils.index import show_toast_notification
+from utils.index import show_toast
 
 def read_product_data(data_file_path):
     product_name = sku = price = quantity = description = ""
@@ -10,14 +10,21 @@ def read_product_data(data_file_path):
         for line in file:
             if line.startswith('name:'):
                 product_name = line.split('name:')[1].strip()
-            if line.startswith('sku:'):
+                is_description = False
+            elif line.startswith('sku:'):
                 sku = line.split('sku:')[1].strip()
-            if line.startswith('price:'):
+                is_description = False
+            elif line.startswith('price:'):
                 price = line.split('price:')[1].strip()
-            if line.startswith('quantity:'):
+                is_description = False
+            elif line.startswith('quantity:'):
                 quantity = line.split('quantity:')[1].strip()
-            if line.startswith('description:'):
-                description = line.split('description')[1].strip()
+                is_description = False
+            elif line.startswith('description:'):
+                description = line.split('description:')[1].strip()
+                is_description = True
+            elif is_description:
+                description += f"\n{line.strip()}"
 
     return product_name, sku, quantity, price, description
 
@@ -31,14 +38,16 @@ def prepare_product_data(folder_path, folder_name):
 
 def remove_images(page):
     try:
-        page.wait_for_selector('.index__succeed--vbk4A img[src^="https"]')
+        page.wait_for_selector('#preview-product-image > div > div.index__dndContainer--WQKEF > div:nth-child(2) .index__succeed--vbk4A')
         img_elements = page.query_selector_all('.index__succeed--vbk4A img[src^="https"]')
         img_length = len(img_elements)
-        print(f'so luong 1: {img_length}')
+        print(f'Số lượng hình hiện tại: {img_length}')
 
         for i in range(img_length):
             page.hover('//*[@id="main_image_item_0"]/div/div')
             page.click('//*[@id="main_image_item_0"]/div/div/div[1]/div[3]')
+            img_elements = page.query_selector_all('.index__succeed--vbk4A img[src^="https"]')
+
     except Exception as e:
         print("Error in remove_images:", e)
 
@@ -75,30 +84,31 @@ def set_product_name(page, product_name):
     except Exception as e:
         print("Error setting product name:", e)
 
-import os
-import time
-
-def generate_description_and_upload_image(page, image_files, image_folder_path, product_name, description):
-    print(f'description: {description}')
+def create_description_and_upload_image(page, image_files, image_folder_path, product_name, description):
     img_path_one = os.path.join(image_folder_path, image_files[0])
     img_path_two = os.path.join(image_folder_path, image_files[1])
     img_path_three = os.path.join(image_folder_path, image_files[2])
+    arr_img = [img_path_one, img_path_two, img_path_three]
     
     try:
         if description:
-            
             page.fill('//*[@id="preview-product-description"]/div[2]/div[2]/div[2]/div/div/div[2]', description)
         else:
             page.fill('//*[@id="preview-product-description"]/div[2]/div[2]/div[1]/div[2]/input', product_name)
             page.click('//*[@id="preview-product-description"]/div[2]/div[2]/div[1]/div[2]/button')
             page.click('//*[@id="preview-product-description"]/div[2]/div[2]/div[1]/div[4]/button')
 
-        page.set_input_files('//*[@id="preview-product-description"]/div[2]/div[2]/div[2]/div/div/input', img_path_one)
-        page.set_input_files('//*[@id="preview-product-description"]/div[2]/div[2]/div[2]/div/div/input', img_path_two)
-        page.set_input_files('//*[@id="preview-product-description"]/div[2]/div[2]/div[2]/div/div/input', img_path_three)
+        for img in arr_img:
+            page.set_input_files('//*[@id="preview-product-description"]/div[2]/div[2]/div[2]/div/div/input', img)
 
-        time.sleep(2)
+        page.wait_for_function("""
+            () => {
+                const img = document.querySelector('#preview-product-description > div.relative.flex.mt-12 > div.w-full > div.index__container--aLzDH > div > div > div.ProseMirror mask img');
+                return img && (img.src.startsWith('https') || img.src.startsWith('blob'));
+            }
+        """)
 
+        time.sleep(3)
     except Exception as e:
         print("Error in create_description_and_upload_image, retrying...", e)
 
@@ -129,7 +139,7 @@ def set_color_and_size(page, image_files, image_folder_path):
             if el:
                 el.click()
             else:
-                print("Không tìm thấy phần tử để click.")
+                print("Not found element to click.")
 
         page.hover('//*[@id="sale_properties"]/div[1]/div[3]/div[1]/div[2]/div/div[1]/div[1]/div/div')
         page.click('//*[@id="sale_properties"]/div[1]/div[3]/div[1]/div[2]/div/div[1]/div[1]/div/div/div/div[1]/div[2]')
@@ -165,28 +175,38 @@ def set_variations(page, price, quantity, sku, is_style):
         if is_style:
             page.click('//*[@id="skus"]/div[2]/div[3]')
             page.wait_for_selector("body > div:nth-of-type(9) > span > div > div:first-child > div > div")
-            optionStyles = page.query_selector_all("body > div:nth-of-type(9) > span > div > div:first-child > div > div > li")
 
-            for index, li in enumerate(optionStyles[1:], start=2):  # Bắt đầu từ phần tử thứ hai
+            # Duyệt qua từng tùy chọn kiểu, bỏ qua tùy chọn đầu tiên
+            for index in range(1, len(page.query_selector_all("body > div:nth-of-type(9) > span > div > div:first-child > div > div > li"))):
+                # Truy vấn lại `optionStyles` sau mỗi lần thao tác để đảm bảo phần tử vẫn tồn tại trong DOM
+                optionStyles = page.query_selector_all("body > div:nth-of-type(9) > span > div > div:first-child > div > div > li")
+                
+                li = optionStyles[index]  # Lấy phần tử tại vị trí hiện tại
+
+                # Lấy văn bản kiểu dáng và tạo SKU mới
+                style_text = li.text_content()
+                first_char = style_text[0]
+                new_sku = f'{first_char}_{sku}'
+                print(new_sku)
+
+                # Thực hiện thao tác click và điền SKU
                 li.click()
-                print(f"Clicked on li element at index {index}")
+                page.wait_for_selector('//*[@id="skus"]/div[2]/div[6]/input')
+                page.fill('//*[@id="skus"]/div[2]/div[6]/input', new_sku)
 
+                # Nhấn nút lưu sau mỗi SKU
+                page.click('//*[@id="skus"]/div[2]/button')
 
-            # for index, style in enumerate(optionStyles[1:], start=2):
-            #     style_text = page.text_content(f'//*[@id="theme-arco-select-popup-361"]/div/div/li[{index}]')
-            #     price(f'style text: {style_text}')
+                # Mở lại danh sách kiểu dáng cho lần chọn tiếp theo
+                page.click('//*[@id="skus"]/div[2]/div[3]')
+                page.wait_for_selector("body > div:nth-of-type(9) > span > div > div:first-child > div > div")
 
-            #     if style_text:
-            #         first_char = style_text[0]
-            #         style.click()                    
-            #         new_sku = f"{first_char}_{sku}"
-            #         page.fill('//*[@id="skus"]/div[2]/div[6]/input', new_sku)
-            #         page.click('//*[@id="skus"]/div[2]/div[3]')
+            # Nhấn nút lưu sau khi hoàn thành vòng lặp
+            page.click('//*[@id="skus"]/div[2]/button')
+
         else:
             page.fill('//*[@id="skus"]/div[2]/div[6]/input', sku)
-
-        
-        page.click('//*[@id="skus"]/div[2]/button')
+            page.click('//*[@id="skus"]/div[2]/button')   
 
     except Exception as e:
         print("Error setting variations:", e)
@@ -194,10 +214,13 @@ def set_variations(page, price, quantity, sku, is_style):
 
 def submit(page):
     try:
-        page.click('//*[@id="GEC-main"]/div[2]/div[1]/div/div/div[2]/div[4]/button')
-        page.wait_for_selector('//*[@id="GEC-main"]/div[2]/div[1]/span')
+        time.sleep(20)
+        print("done")
+        # page.click('//*[@id="GEC-main"]/div[2]/div[1]/div/div/div[2]/div[4]/button')
+        # page.wait_for_selector('//*[@id="GEC-main"]/div[2]/div[1]/span')
     except Exception as e:
         print("Error in submit:", e)
+
 
 def run_tool(page, folder_path, folder_name, is_style):
     image_folder_path, data_file_path, image_files, product_name, sku, price, quantity, description = prepare_product_data(folder_path, folder_name)
@@ -205,7 +228,7 @@ def run_tool(page, folder_path, folder_name, is_style):
     remove_images(page)
     load_images(page, image_files, image_folder_path)
     set_product_name(page, product_name)
-    generate_description_and_upload_image(page, image_files, image_folder_path, product_name, description)
+    create_description_and_upload_image(page, image_files, image_folder_path, product_name, description)
     if not is_style:
         set_color_and_size(page, image_files, image_folder_path)
     set_variations(page, price, quantity, sku, is_style)
